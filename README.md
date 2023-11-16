@@ -10,23 +10,23 @@ WYBOTFramework仅供经过认证的第三方开发者使用。
 
 ### Swift Package Manager
 
-在XCode中选择Swift package -> Add Package dependency,使用下面的URL```https://github.com/WYBOTICS/WYLib.git```添加package到项目中。
+在XCode中选择Swift package -> Add Package dependency,使用下面的URL添加package到项目中。
 然后在项目中```import WYBOTFramewokr```按下面的列子使用
 
 ## Fucntions
 
-- [x] 连接设备
-- [x] 搜索设备
-- [x] 注册设备
-- [x] 获取用户设备列表
-- [x] 配置设备网络
-- [x] 设置/查询设备工作模式
-- [x] 设置/查询设备工作路径
-- [x] 设置/查询循环预约
-- [x] 查询设备功能
-- [x] 查询/升级设备固件
-- [x] 设置设备工作泳池参数
-- [] 电量查询（暂不支持，等待固件更新后支持）
+[x] 连接设备
+[x] 搜索设备
+[x] 注册设备
+[x] 获取用户设备列表
+[x] 配置设备网络
+[x] 设置/查询设备工作模式
+[x] 设置/查询设备工作路径
+[x] 设置/查询循环预约
+[x] 查询设备功能
+[x] 查询/升级设备固件
+[x] 设置设备工作泳池参数
+[] 电量查询（暂不支持，等待固件更新后支持）
 
 ## Usage
 
@@ -39,8 +39,19 @@ import WYLib
 ```
 配置SDK API Key, 联系开发者获取api key
 ```
-WYLib.config.(apiKey:"your api key"）
+WYLib.config(apiKey:"your api key"）
 ```
+
+配置开发选项
+```
+WYLib.config(debug: true)
+```
+debug为true时连接测试服务器，false时连接线上正式服务器
+
+默认超时
+设置超时为5秒可以通过
+ ```config(timeout: UInt64)```
+更改超时等待时间。
 
 确认已经打开蓝牙权限
 
@@ -147,16 +158,6 @@ let devices = wylib.deviceList(user.userId, token: user.token)
 //devices:[Devices]
 ```
 
-#### 查询设备功能
-
-本api返回设备含有的功能列表，可以依据返回的功能定制显示内容
-
-```
-let function = wylib.deviceFuncs()
-//function 为WYFunction结构体
-
-```
-
 #### 查询设备当前工作模式
 
 ```
@@ -172,19 +173,50 @@ let function = wylib.deviceFuncs()
 		///	.turbo 强力清洗模式，强力模式只清洗池底
 		///	combo和full的不同是combo 会先清洗一段时间池壁，剩下的时间都清洗池底。full是同时清洗，遇到墙壁就先上墙。
 let mode = wylib.cleanMode()
-
+		/// 查询清洗模式
+		/// 通过蓝牙和物联网同时发送请求
+		/// - Returns: 返回清洗模式enum
+		/// 模式说明
+		/// .floor 池底模式
+		/// .wall 池壁模式
+		///	.waterline 水线模式
+		///	.combo 先清洗池壁，在清洗池底。
+		///	.full 标准全池模式，同时清洗池壁和池底
+		///	.eco 节能模式，节能模式只清洗池底
+		///	.turbo 强力清洗模式，强力模式只清洗池底
+		///	combo和full的不同是combo 会先清洗一段时间池壁，剩下的时间都清洗池底。full是同时清洗，遇到墙壁就先上墙。
+	let mode = wylib.cleanMode(for: deviceId)
 ```
+`cleanMode(for deviceId: String)`方法将自动通过互联网和蓝牙来获取数据。`cleanMode()`方法只使用蓝牙获取当前连接的设备
+
 #### 设置设备工作模式
 
 当设备开启cyle timer 后设置工作模式会失败，cyle timer只工作在池底模式下，不可修改其他模式
 ``` 
+蓝牙通道
 let result = wylib.setCleanMode(.floor)
 //result 为true时设置成功
+双通道
+//token为用户登录后返回的token
+let result = wylib.setCleanMode(.floor, to: deviceId, with: token)
+
+```
+#### 查询设备功能
+
+本api返回设备含有的功能列表，可以依据返回的功能定制显示内容
+
+```
+//蓝牙通道
+//返回值function 为WYFunction结构体
+let function = wylib.deviceFuncs()
+//双通道
+let function = wylib.deviceFuncs(for: deviceId)
 ```
 
 #### 查询循环预约
 
 ```
+//蓝牙通道
 		/// 查询循环预约
 		/// - Returns: WYCycleTimer 枚举
 		///	once 关闭
@@ -192,14 +224,18 @@ let result = wylib.setCleanMode(.floor)
 		///	three 一次充电清洗3次
 		///	four 一次充电清洗4次
 let times = wylib.cycleTimer()
-
+//双通道
+let times = wylib.cycleTimer(for: deviceId)
 ```
 
 #### 设置循环预约
 
 ```
+//蓝牙通道
 let result = wylib.setCycleTimer(.once)
 // result true 成功，fales 失败
-```
+//双通道
+let result = wylib.setCycleTimer(.onec, to: deviceId, with: token)
 
+```
 
